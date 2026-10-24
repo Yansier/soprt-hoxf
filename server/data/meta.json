@@ -5,5 +5,6 @@
   "apiCallCount": 0,
   "rateLimitRemaining": null,
   "hasLiveMatches": false,
-  "nextKickoffAt": null
+  "nextKickoffAt": null,
+  "dates": {}
 }

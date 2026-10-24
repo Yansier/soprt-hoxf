@@ -44,6 +44,7 @@ function football_default_meta(): array
         'rateLimitRemaining' => null,
         'hasLiveMatches' => false,
         'nextKickoffAt' => null,
+        'dates' => [],
     ];
 }
 
@@ -192,7 +193,73 @@ function football_schedule_state(array $fixtures, int $now): array
     return ['hasLive' => $hasLive, 'hasToday' => $hasToday, 'next' => $next];
 }
 
-function football_should_request(array $meta, array $fixtures, int $now): string
+function football_window(int $now): array
+{
+    return [
+        'prev' => gmdate('Y-m-d', $now - 86400),
+        'today' => gmdate('Y-m-d', $now),
+        'next' => gmdate('Y-m-d', $now + 86400),
+    ];
+}
+
+function football_slot_file(string $role): string
+{
+    if ($role === 'prev') {
+        return 'fixtures-prev.json';
+    }
+    if ($role === 'next') {
+        return 'fixtures-next.json';
+    }
+    return 'fixtures-today.json';
+}
+
+function football_fixtures_url(string $date): string
+{
+    return 'https://v3.football.api-sports.io/fixtures?date=' . rawurlencode($date) . '&timezone=UTC';
+}
+
+function football_in_active_window(int $kickoff, int $now): bool
+{
+    return $now >= ($kickoff - 1800) && $now <= ($kickoff + 10800);
+}
+
+function football_today_interval(array $fixtures, int $now): int
+{
+    $liveInWindow = false;
+    $nextKickoff = null;
+    $hasFuture = false;
+    foreach ($fixtures as $fixture) {
+        if (!is_array($fixture)) {
+            continue;
+        }
+        $kickoff = strtotime((string) ($fixture['kickoffAt'] ?? ''));
+        if (!$kickoff) {
+            continue;
+        }
+        $status = (string) ($fixture['apiStatus'] ?? '');
+        if (football_in_active_window($kickoff, $now) && in_array($status, FOOTBALL_LIVE_STATUSES, true)) {
+            $liveInWindow = true;
+        }
+        if ($kickoff > $now) {
+            $hasFuture = true;
+            if ($nextKickoff === null || $kickoff < $nextKickoff) {
+                $nextKickoff = $kickoff;
+            }
+        }
+    }
+    if ($liveInWindow) {
+        return 900;
+    }
+    if ($nextKickoff !== null && ($nextKickoff - $now) <= 7200) {
+        return 1800;
+    }
+    if ($hasFuture) {
+        return 3600;
+    }
+    return 7200;
+}
+
+function football_quota_block(array $meta, int $now): string
 {
     $today = gmdate('Y-m-d', $now);
     $count = (($meta['apiCallDate'] ?? '') === $today) ? (int) ($meta['apiCallCount'] ?? 0) : 0;
@@ -203,34 +270,34 @@ function football_should_request(array $meta, array $fixtures, int $now): string
     if (($meta['apiCallDate'] ?? '') === $today && $remaining !== null && (int) $remaining <= FOOTBALL_REMAINING_FLOOR) {
         return 'rate-remaining';
     }
-    $last = (int) ($meta['lastSuccessAt'] ?? 0);
-    if ($last <= 0) {
-        return '';
-    }
-    $elapsed = $now - $last;
-    $state = football_schedule_state($fixtures, $now);
-    if ($state['hasLive']) {
-        return $elapsed >= 600 ? '' : 'interval';
-    }
-    if ($state['next'] !== null && ($state['next'] - $now) <= 3600) {
-        return $elapsed >= 1200 ? '' : 'interval';
-    }
-    if ($state['hasToday']) {
-        return $elapsed >= 1800 ? '' : 'interval';
-    }
-    return $elapsed >= 3600 ? '' : 'interval';
+    return '';
 }
 
-function football_request(string $key, int $now): array
+function football_date_block(string $role, array $fixtures, int $lastSuccessAt, int $now): string
 {
-    $from = gmdate('Y-m-d', $now - 86400);
-    $to = gmdate('Y-m-d', $now + 86400);
-    $url = 'https://v3.football.api-sports.io/fixtures?from=' . rawurlencode($from) . '&to=' . rawurlencode($to) . '&timezone=UTC';
+    if ($lastSuccessAt <= 0) {
+        return '';
+    }
+    $need = $role === 'today' ? football_today_interval($fixtures, $now) : 21600;
+    return ($now - $lastSuccessAt) >= $need ? '' : 'interval';
+}
+
+function football_log_api_errors(array $payload): void
+{
+    if (!football_errors_present($payload['errors'] ?? null)) {
+        return;
+    }
+    $encoded = json_encode($payload['errors'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    error_log('HOXF football API errors: ' . (is_string($encoded) ? $encoded : '[]'));
+}
+
+function football_request(string $key, string $date): array
+{
     $headers = [];
-    $ch = curl_init($url);
+    $ch = curl_init(football_fixtures_url($date));
     curl_setopt_array($ch, [
         CURLOPT_HTTPGET => true,
-        CURLOPT_HTTPHEADER => ['x-apisports-key: ' . $key, 'Accept: application/json'],
+        CURLOPT_HTTPHEADER => ['x-apisports-key: ' . $key],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 5,
         CURLOPT_TIMEOUT => FOOTBALL_TIMEOUT_SECONDS,
@@ -247,6 +314,10 @@ function football_request(string $key, int $now): array
     $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     curl_close($ch);
     $remaining = $headers['x-ratelimit-requests-remaining'] ?? $headers['x-ratelimit-remaining'] ?? null;
+    $payload = is_string($body) ? json_decode($body, true) : null;
+    if (is_array($payload)) {
+        football_log_api_errors($payload);
+    }
     if ($errno === CURLE_OPERATION_TIMEDOUT) {
         return ['ok' => false, 'code' => 'timeout', 'status' => $status, 'remaining' => $remaining];
     }
@@ -259,7 +330,6 @@ function football_request(string $key, int $now): array
     if ($status < 200 || $status >= 300) {
         return ['ok' => false, 'code' => 'http', 'status' => $status, 'remaining' => $remaining];
     }
-    $payload = json_decode($body, true);
     if (!is_array($payload) || football_errors_present($payload['errors'] ?? null) || !isset($payload['response']) || !is_array($payload['response'])) {
         return ['ok' => false, 'code' => 'invalid', 'status' => $status, 'remaining' => $remaining];
     }
@@ -274,6 +344,235 @@ function football_request(string $key, int $now): array
         }
     }
     return ['ok' => true, 'code' => 'ok', 'status' => $status, 'remaining' => $remaining, 'fixtures' => $fixtures];
+}
+
+function football_load_dated_caches(): array
+{
+    $byDate = [];
+    foreach (['fixtures-prev.json', 'fixtures-today.json', 'fixtures-next.json'] as $name) {
+        $payload = football_read_json(football_data_path($name));
+        if (!is_array($payload)) {
+            continue;
+        }
+        $date = (string) ($payload['date'] ?? '');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !isset($payload['fixtures']) || !is_array($payload['fixtures'])) {
+            continue;
+        }
+        $byDate[$date] = [
+            'date' => $date,
+            'updatedAt' => $payload['updatedAt'] ?? null,
+            'fixtures' => $payload['fixtures'],
+        ];
+    }
+    return $byDate;
+}
+
+function football_merge_fixtures(array $groups): array
+{
+    $byId = [];
+    foreach ($groups as $fixtures) {
+        if (!is_array($fixtures)) {
+            continue;
+        }
+        foreach ($fixtures as $fixture) {
+            if (!is_array($fixture) || !isset($fixture['id']) || $fixture['id'] === '') {
+                continue;
+            }
+            $byId[(string) $fixture['id']] = $fixture;
+        }
+    }
+    return array_values($byId);
+}
+
+function football_kickoff_date(array $fixture): string
+{
+    $kickoff = strtotime((string) ($fixture['kickoffAt'] ?? ''));
+    return $kickoff ? gmdate('Y-m-d', $kickoff) : '';
+}
+
+function football_publish(array $byDate, array $window): bool
+{
+    foreach (['prev', 'today', 'next'] as $role) {
+        $date = $window[$role];
+        if (!isset($byDate[$date])) {
+            continue;
+        }
+        if (!football_write_json(football_data_path(football_slot_file($role)), $byDate[$date])) {
+            error_log('HOXF football: failed to write ' . football_slot_file($role));
+            return false;
+        }
+    }
+
+    $covered = [];
+    foreach (['prev', 'today', 'next'] as $role) {
+        if (isset($byDate[$window[$role]])) {
+            $covered[$window[$role]] = true;
+        }
+    }
+    if (!$covered) {
+        return true;
+    }
+
+    $existingPath = football_data_path('fixtures.json');
+    $existing = football_read_json($existingPath);
+    $existingFixtures = (is_array($existing) && isset($existing['fixtures']) && is_array($existing['fixtures']))
+        ? $existing['fixtures']
+        : [];
+    $windowDates = array_fill_keys(array_values($window), true);
+    $groups = [];
+    $retained = [];
+    foreach ($existingFixtures as $fixture) {
+        if (!is_array($fixture)) {
+            continue;
+        }
+        $date = football_kickoff_date($fixture);
+        if ($date === '' || !isset($windowDates[$date]) || isset($covered[$date])) {
+            continue;
+        }
+        $retained[] = $fixture;
+    }
+    if ($retained) {
+        $groups[] = $retained;
+    }
+    foreach (['prev', 'today', 'next'] as $role) {
+        $date = $window[$role];
+        if (isset($byDate[$date])) {
+            $groups[] = $byDate[$date]['fixtures'];
+        }
+    }
+
+    $latest = 0;
+    if (is_array($existing) && !empty($existing['updatedAt'])) {
+        $parsed = strtotime((string) $existing['updatedAt']);
+        if ($parsed) {
+            $latest = $parsed;
+        }
+    }
+    foreach (['prev', 'today', 'next'] as $role) {
+        $entry = $byDate[$window[$role]] ?? null;
+        $stamp = is_array($entry) ? ($entry['updatedAt'] ?? null) : null;
+        $parsed = is_string($stamp) ? strtotime($stamp) : false;
+        if ($parsed && $parsed > $latest) {
+            $latest = $parsed;
+        }
+    }
+
+    $saved = football_write_json($existingPath, [
+        'updatedAt' => $latest ? gmdate('c', $latest) : null,
+        'fixtures' => football_merge_fixtures($groups),
+    ]);
+    if (!$saved) {
+        error_log('HOXF football: failed to write fixtures.json');
+    }
+    return $saved;
+}
+
+function football_refresh(string $key, int $now): string
+{
+    $meta = football_read_meta();
+    $today = gmdate('Y-m-d', $now);
+    if (($meta['apiCallDate'] ?? '') !== $today) {
+        $meta['apiCallDate'] = $today;
+        $meta['apiCallCount'] = 0;
+        $meta['rateLimitRemaining'] = null;
+    }
+    if (!isset($meta['dates']) || !is_array($meta['dates'])) {
+        $meta['dates'] = [];
+    }
+
+    $window = football_window($now);
+    $byDate = football_load_dated_caches();
+    $updated = 0;
+    $failed = [];
+    $blocked = '';
+    $fresh = [];
+
+    foreach (['today', 'next', 'prev'] as $role) {
+        $date = $window[$role];
+        $quota = football_quota_block($meta, $now);
+        if ($quota !== '') {
+            $blocked = $quota;
+            break;
+        }
+        $known = $byDate[$date] ?? null;
+        $fixtures = is_array($known) ? $known['fixtures'] : [];
+        $dateMeta = $meta['dates'][$date] ?? null;
+        $last = is_array($dateMeta) ? (int) ($dateMeta['lastSuccessAt'] ?? 0) : 0;
+        if ($last <= 0 && is_array($known) && !empty($known['updatedAt'])) {
+            $parsed = strtotime((string) $known['updatedAt']);
+            if ($parsed) {
+                $last = $parsed;
+            }
+        }
+        if (football_date_block($role, $fixtures, $last, $now) === 'interval') {
+            continue;
+        }
+
+        $meta['lastAttemptAt'] = $now;
+        $response = football_request($key, $date);
+        $meta['apiCallCount'] = (int) $meta['apiCallCount'] + 1;
+        if ($response['remaining'] !== null && is_numeric($response['remaining'])) {
+            $meta['rateLimitRemaining'] = (int) $response['remaining'];
+        }
+        if (!$response['ok']) {
+            error_log('HOXF football: request failed (' . $response['code'] . ') date=' . $date);
+            $failed[] = $response['code'];
+            continue;
+        }
+        $byDate[$date] = [
+            'date' => $date,
+            'updatedAt' => gmdate('c', $now),
+            'fixtures' => $response['fixtures'],
+        ];
+        $fresh[$date] = $now;
+        $updated++;
+    }
+
+    $keep = array_fill_keys(array_values($window), true);
+    foreach (array_keys($meta['dates']) as $date) {
+        if (!isset($keep[$date])) {
+            unset($meta['dates'][$date]);
+        }
+    }
+
+    $stored = football_publish($byDate, $window);
+    if ($stored) {
+        foreach ($fresh as $date => $stamp) {
+            $current = $meta['dates'][$date] ?? [];
+            if (!is_array($current)) {
+                $current = [];
+            }
+            $current['lastSuccessAt'] = $stamp;
+            $meta['dates'][$date] = $current;
+        }
+        $stamps = [(int) ($meta['lastSuccessAt'] ?? 0)];
+        foreach ($window as $date) {
+            $dateMeta = $meta['dates'][$date] ?? null;
+            $stamps[] = is_array($dateMeta) ? (int) ($dateMeta['lastSuccessAt'] ?? 0) : 0;
+        }
+        $meta['lastSuccessAt'] = max($stamps);
+    }
+
+    $todayEntry = $byDate[$window['today']] ?? null;
+    $todayFixtures = is_array($todayEntry) ? ($todayEntry['fixtures'] ?? []) : [];
+    $state = football_schedule_state(is_array($todayFixtures) ? $todayFixtures : [], $now);
+    $meta['hasLiveMatches'] = $state['hasLive'];
+    $meta['nextKickoffAt'] = $state['next'] ? gmdate('c', $state['next']) : null;
+    football_write_json(football_data_path('meta.json'), $meta);
+
+    if (!$stored) {
+        return 'write-failed';
+    }
+    if ($updated > 0) {
+        return 'updated';
+    }
+    if ($failed) {
+        return $failed[0];
+    }
+    if ($blocked !== '') {
+        return $blocked;
+    }
+    return 'interval';
 }
 
 function football_update(int $now = 0): string
@@ -300,44 +599,7 @@ function football_update(int $now = 0): string
             error_log('HOXF football: API_FOOTBALL_KEY is missing');
             $result = 'missing-key';
         } else {
-            $meta = football_read_meta();
-            $existing = football_read_fixtures();
-            $reason = football_should_request($meta, $existing, $now);
-            if ($reason !== '') {
-                $result = $reason;
-            } else {
-                $meta['lastAttemptAt'] = $now;
-                $today = gmdate('Y-m-d', $now);
-                if (($meta['apiCallDate'] ?? '') !== $today) {
-                    $meta['apiCallDate'] = $today;
-                    $meta['apiCallCount'] = 0;
-                    $meta['rateLimitRemaining'] = null;
-                }
-                $response = football_request($key, $now);
-                $meta['apiCallCount'] = (int) $meta['apiCallCount'] + 1;
-                if ($response['remaining'] !== null && is_numeric($response['remaining'])) {
-                    $meta['rateLimitRemaining'] = (int) $response['remaining'];
-                }
-                if (!$response['ok']) {
-                    error_log('HOXF football: request failed (' . $response['code'] . ')');
-                    football_write_json(football_data_path('meta.json'), $meta);
-                    $result = $response['code'];
-                } else {
-                    $state = football_schedule_state($response['fixtures'], $now);
-                    $meta['lastSuccessAt'] = $now;
-                    $meta['hasLiveMatches'] = $state['hasLive'];
-                    $meta['nextKickoffAt'] = $state['next'] ? gmdate('c', $state['next']) : null;
-                    $saved = football_write_json(football_data_path('fixtures.json'), [
-                        'updatedAt' => gmdate('c', $now),
-                        'fixtures' => $response['fixtures'],
-                    ]);
-                    football_write_json(football_data_path('meta.json'), $meta);
-                    $result = $saved ? 'updated' : 'write-failed';
-                    if (!$saved) {
-                        error_log('HOXF football: failed to write fixtures.json');
-                    }
-                }
-            }
+            $result = football_refresh($key, $now);
         }
     } finally {
         flock($lock, LOCK_UN);
