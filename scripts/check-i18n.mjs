@@ -1,12 +1,12 @@
 import { en, languages, localeSources } from '../src/i18n/locales.js'
 
-const { translated, phase12, gaps } = localeSources
+const { translated, phase12, gaps, phase25 } = localeSources
 const keys = Object.keys(en)
 let failed = false
 
 for (const { code } of languages) {
   if (code === 'en') continue
-  const bag = { ...(translated[code] || {}), ...(phase12[code] || {}), ...(gaps[code] || {}) }
+  const bag = { ...(translated[code] || {}), ...(phase12[code] || {}), ...(gaps[code] || {}), ...(phase25?.[code] || {}) }
   for (const key of keys) {
     if (!(key in bag)) {
       console.log(`[${code}] missing: ${key}`)

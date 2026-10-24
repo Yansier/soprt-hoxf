@@ -5,3 +5,7 @@ dist
 .env
 .env.local
 .env.*.local
+server/config/config.php
+server/data/update.lock
+server/data/*.tmp
+server/data/*.bak

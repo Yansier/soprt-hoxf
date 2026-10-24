@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader.vue'
 import HeroCarousel from '../components/HeroCarousel.vue'
 import VipCounter from '../components/VipCounter.vue'
 import LeagueTabs from '../components/LeagueTabs.vue'
+import CompetitionSchedule from '../components/CompetitionSchedule.vue'
 import PromoModal from '../components/PromoModal.vue'
 import ActivityToast from '../components/ActivityToast.vue'
 import BottomVipBar from '../components/BottomVipBar.vue'
@@ -13,7 +14,7 @@ import { currentLanguage, t } from '../i18n'
 import { randomInt } from '../utils/random'
 
 const app = inject('app')
-const { matches, featured, leagues, lastUpdated, usingFallback } = useFootballData()
+const { groups, featured, lastUpdated, usingFallback } = useFootballData()
 const updatedLabel = computed(() => {
   if (usingFallback.value || !lastUpdated.value) return ''
   const time = new Intl.DateTimeFormat(currentLanguage.value, { hour: '2-digit', minute: '2-digit' }).format(new Date(lastUpdated.value))
@@ -64,7 +65,10 @@ onBeforeUnmount(() => [countTimer, activityTimer, activityHideTimer, promoTimer]
     <main>
       <HeroCarousel :matches="featured" />
       <div class="section-pad vip-wrap"><VipCounter :count="count" /></div>
-      <LeagueTabs :matches="matches" :leagues="leagues" :updated-label="updatedLabel" />
+      <section class="schedule-section section-pad">
+        <LeagueTabs :groups="groups" />
+        <CompetitionSchedule :groups="groups" :updated-label="updatedLabel" />
+      </section>
       <section class="why-section section-pad"><span class="eyebrow">HOXF STANDARD</span><h2>{{ t('why') }}</h2><div class="feature-grid"><article v-for="item in featureItems" :key="item.title"><span>{{ item.icon }}</span><b>{{ item.title }}</b><small>{{ item.text }}</small></article></div></section>
       <section class="final-cta"><span class="stadium-lines"></span><div class="eyebrow">HOXF SPORT TV</div><h2>{{ t('neverMiss') }}</h2><p>{{ t('neverMissBody') }}</p><strong>{{ t('twelveFree') }}</strong><button class="primary-button full" @click="app.claimVip">{{ app.loggedIn.value ? t('vipActive') : t('getFreeVip') }}</button></section>
     </main>

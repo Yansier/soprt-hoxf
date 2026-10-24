@@ -28,6 +28,7 @@ export const en = {
   checkingAvailability: 'Checking VIP availability...', reloginHint: 'If the issue continues, try signing out and signing in again.',
   signOutRelogin: 'Sign out & sign in again', signedOut: 'Signed out', vipMembership: 'VIP membership', vipEnjoy: 'Enjoy full access to HOXF SPORT TV',
   updatedAt: 'Updated {time}', tomorrowLabel: 'Tomorrow', fourScreens: '4 screens', monthsShort: 'Months', halfTime: 'HT', fullTime: 'FT',
+  todaysMatches: "Today's matches", matchesCount: '{count} matches', matchEnded: 'Match ended', schedule: 'Schedule',
 }
 
 const phase12 = {
@@ -64,5 +65,22 @@ const translated = {
   tr: { signIn:'Giriş yap',language:'Dil',liveNow:'Canlı',upcoming:'Yakında',watchLive:'Canlı izle',enterMatch:'Maça gir',liveMatches:'Canlı maçlar',today:'Bugün',results:'Sonuçlar',topLeagues:'En iyi ligler',limitedOffer:'Sınırlı VIP teklifi',freeAccess:'12 ay ücretsiz futbol',passesRemaining:'Kalan VIP hakkı',claimVip:'Ücretsiz VIP al',vipActive:'VIP aktif',daysRemaining:'{count} gün kaldı',registerNow:'Şimdi kaydol',maybeLater:'Belki sonra',why:'Neden HOXF SPORT TV',neverMiss:'Hiçbir maçı kaçırma',getFreeVip:'Ücretsiz VIP al',joinNow:'Şimdi katıl',createAccount:'Hesabını oluştur',claimSubtitle:'12 aylık ücretsiz VIP al',name:'Ad',email:'E-posta',verification:'Doğrulama kodu',registerClaim:'Kaydol ve VIP al',creating:'Hesabın oluşturuluyor...',activated:'VIP etkinleştirildi',validUntil:'VIP geçerlilik tarihi',enterHoxf:'HOXF SPORT TV’ye gir' },
 }
 
-export const localeSources = { translated, phase12, gaps }
-export const locales = Object.fromEntries(languages.map(({ code }) => [code, { ...en, ...(translated[code] || {}), ...(phase12[code] || {}), ...(gaps[code] || {}) }]))
+const phase25 = {
+  es: { todaysMatches: 'Partidos de hoy', matchesCount: '{count} partidos', matchEnded: 'Partido finalizado', schedule: 'Calendario' },
+  pt: { todaysMatches: 'Jogos de hoje', matchesCount: '{count} jogos', matchEnded: 'Jogo encerrado', schedule: 'Calendário' },
+  fr: { todaysMatches: 'Matchs du jour', matchesCount: '{count} matchs', matchEnded: 'Match terminé', schedule: 'Calendrier' },
+  de: { todaysMatches: 'Spiele heute', matchesCount: '{count} Spiele', matchEnded: 'Spiel beendet', schedule: 'Spielplan' },
+  it: { todaysMatches: 'Partite di oggi', matchesCount: '{count} partite', matchEnded: 'Partita finita', schedule: 'Calendario' },
+  'zh-CN': { todaysMatches: '今日赛程', matchesCount: '{count} 场比赛', matchEnded: '比赛结束', schedule: '赛程' },
+  'zh-TW': { todaysMatches: '今日賽程', matchesCount: '{count} 場比賽', matchEnded: '比賽結束', schedule: '賽程' },
+  ja: { todaysMatches: '今日の試合', matchesCount: '{count}試合', matchEnded: '試合終了', schedule: '日程' },
+  ko: { todaysMatches: '오늘의 경기', matchesCount: '{count}경기', matchEnded: '경기 종료', schedule: '일정' },
+  ar: { todaysMatches: 'مباريات اليوم', matchesCount: '{count} مباريات', matchEnded: 'انتهت المباراة', schedule: 'الجدول' },
+  th: { todaysMatches: 'แมตช์วันนี้', matchesCount: '{count} นัด', matchEnded: 'จบการแข่งขัน', schedule: 'ตาราง' },
+  vi: { todaysMatches: 'Trận hôm nay', matchesCount: '{count} trận', matchEnded: 'Trận đã kết thúc', schedule: 'Lịch thi đấu' },
+  id: { todaysMatches: 'Pertandingan hari ini', matchesCount: '{count} pertandingan', matchEnded: 'Pertandingan selesai', schedule: 'Jadwal' },
+  tr: { todaysMatches: 'Bugünün maçları', matchesCount: '{count} maç', matchEnded: 'Maç bitti', schedule: 'Fikstür' },
+}
+
+export const localeSources = { translated, phase12, gaps, phase25 }
+export const locales = Object.fromEntries(languages.map(({ code }) => [code, { ...en, ...(translated[code] || {}), ...(phase12[code] || {}), ...(gaps[code] || {}), ...(phase25[code] || {}) }]))

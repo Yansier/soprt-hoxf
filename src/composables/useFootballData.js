@@ -1,8 +1,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { fetchTodayFixtures, FootballRequestError, todayInTimeZone, userTimeZone } from '../api/football'
-import { adaptFallbackMatch, adaptFixture, buildLeagues, capMatches } from '../adapters/footballAdapter'
-import { CACHE_STORAGE_KEY, CACHE_TTL_IDLE_MS, CACHE_TTL_LIVE_MS, MAX_SESSION_REFRESHES, REFRESH_BLOCK_KEY, REFRESH_COUNT_KEY } from '../config/football'
-import { matches as fallbackMatches } from '../data/matches'
+import { fetchFootballFeed, FootballRequestError, userTimeZone } from '../api/football.js'
+import { adaptFallbackMatch, adaptFeedFixture, groupByLeague, selectFeaturedMatches } from '../adapters/footballAdapter.js'
+import { CACHE_STORAGE_KEY, FEED_REFRESH_IDLE_MS, FEED_REFRESH_LIVE_MS } from '../config/football.js'
+import { matches as fallbackMatches } from '../data/matches.js'
 
 const matches = ref([])
 const loading = ref(false)
@@ -14,11 +14,19 @@ let loopReady = false
 let active = false
 
 function fallbackList() {
-  return capMatches(fallbackMatches.map(adaptFallbackMatch))
+  return fallbackMatches.map(adaptFallbackMatch)
 }
 
-function ttlFor(list) {
-  return list.some((match) => match.status === 'LIVE' || match.status === 'HT') ? CACHE_TTL_LIVE_MS : CACHE_TTL_IDLE_MS
+function decorateFeatured(list) {
+  return selectFeaturedMatches(list).map((match, index) => ({
+    ...match,
+    featured: true,
+    banner: match.banner || `banner-0${index + 1}.jpg`,
+  }))
+}
+
+function refreshDelay(list) {
+  return list.some((match) => match.status === 'LIVE' || match.status === 'HT') ? FEED_REFRESH_LIVE_MS : FEED_REFRESH_IDLE_MS
 }
 
 function isMatch(value) {
@@ -34,9 +42,7 @@ function readCache() {
     const raw = localStorage.getItem(CACHE_STORAGE_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw)
-    if (!parsed || !Array.isArray(parsed.matches) || !parsed.matches.every(isMatch) || !parsed.date || !parsed.cachedAt) {
-      throw new Error('invalid cache')
-    }
+    if (!parsed || !Array.isArray(parsed.matches) || !parsed.matches.every(isMatch)) throw new Error('invalid cache')
     return parsed
   } catch {
     clearCache()
@@ -46,28 +52,6 @@ function readCache() {
 
 function writeCache(payload) {
   try { localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(payload)) } catch { /* quota or private mode */ }
-}
-
-function sessionFlag(key) {
-  try { return sessionStorage.getItem(key) } catch { return null }
-}
-
-function sessionSet(key, value) {
-  try { sessionStorage.setItem(key, value) } catch { /* storage unavailable */ }
-}
-
-function refreshCount() {
-  const value = Number(sessionFlag(REFRESH_COUNT_KEY) || 0)
-  return Number.isFinite(value) ? value : 0
-}
-
-function sessionBlocked() {
-  return sessionFlag(REFRESH_BLOCK_KEY) === '1'
-}
-
-function blockSession() {
-  sessionSet(REFRESH_BLOCK_KEY, '1')
-  clearTimeout(refreshTimer)
 }
 
 function warn(code) {
@@ -82,48 +66,46 @@ function applyFallback() {
 
 function showStoredOrFallback() {
   const cache = readCache()
-  const today = todayInTimeZone(userTimeZone())
-  if (cache && cache.date === today) {
+  if (cache?.updatedAt && cache.matches?.length) {
     matches.value = cache.matches
     usingFallback.value = false
-    lastUpdated.value = cache.cachedAt
-    return { cache, fresh: Date.now() - cache.cachedAt < ttlFor(cache.matches) }
+    lastUpdated.value = cache.updatedAt || cache.cachedAt
+    return
   }
   applyFallback()
-  return { cache: null, fresh: false }
 }
 
 function schedule(delay) {
   clearTimeout(refreshTimer)
-  if (!active || !import.meta.env?.VITE_API_FOOTBALL_KEY || sessionBlocked() || refreshCount() >= MAX_SESSION_REFRESHES) return
+  if (!active || !import.meta.env?.VITE_FOOTBALL_FEED_URL) return
   refreshTimer = setTimeout(() => { refresh() }, Math.max(1000, delay))
 }
 
 async function refresh() {
-  if (sessionBlocked() || refreshCount() >= MAX_SESSION_REFRESHES || loading.value) return
-  if (!import.meta.env?.VITE_API_FOOTBALL_KEY) {
-    warn('missing-key')
+  if (loading.value) return
+  if (!import.meta.env?.VITE_FOOTBALL_FEED_URL) {
+    warn('missing-feed')
     return
   }
-
   const serial = ++requestSerial
   loading.value = true
-  sessionSet(REFRESH_COUNT_KEY, String(refreshCount() + 1))
   try {
-    const result = await fetchTodayFixtures()
+    const result = await fetchFootballFeed()
     if (serial !== requestSerial) return
-    const visible = capMatches(result.fixtures.map(adaptFixture).filter(Boolean))
-    const cachedAt = Date.now()
+    const ready = result.updatedAt || result.fixtures.length
+    if (!ready) {
+      if (usingFallback.value) applyFallback()
+      return
+    }
+    const visible = result.fixtures.map(adaptFeedFixture).filter(Boolean)
     matches.value = visible
     usingFallback.value = false
-    lastUpdated.value = cachedAt
-    writeCache({ matches: visible, cachedAt, date: result.date })
-    if (active) schedule(ttlFor(visible))
+    lastUpdated.value = result.updatedAt || Date.now()
+    writeCache({ matches: visible, cachedAt: Date.now(), updatedAt: lastUpdated.value })
+    if (active) schedule(refreshDelay(visible))
   } catch (error) {
     if (serial !== requestSerial) return
-    const code = error instanceof FootballRequestError ? error.code : 'failed'
-    warn(code)
-    if (code === 'rate-limit' || code === 'missing-key') blockSession()
+    warn(error instanceof FootballRequestError ? error.code : 'failed')
     if (usingFallback.value) applyFallback()
   } finally {
     if (serial === requestSerial) loading.value = false
@@ -133,9 +115,8 @@ async function refresh() {
 function ensure() {
   if (loopReady) return
   loopReady = true
-  const stored = showStoredOrFallback()
-  if (stored.fresh) schedule(ttlFor(stored.cache.matches) - (Date.now() - stored.cache.cachedAt))
-  else refresh()
+  showStoredOrFallback()
+  refresh()
 }
 
 export function useFootballData() {
@@ -149,7 +130,8 @@ export function useFootballData() {
     loopReady = false
     clearTimeout(refreshTimer)
   })
-  const featured = computed(() => matches.value.filter((match) => match.featured))
-  const leagues = computed(() => buildLeagues(matches.value))
-  return { matches, featured, leagues, loading, usingFallback, lastUpdated, refresh }
+  const timeZone = userTimeZone()
+  const groups = computed(() => groupByLeague(matches.value, timeZone))
+  const featured = computed(() => decorateFeatured(groups.value.flatMap((group) => group.matches)))
+  return { matches, groups, featured, loading, usingFallback, lastUpdated, refresh }
 }

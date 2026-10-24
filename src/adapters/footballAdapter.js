@@ -5,6 +5,8 @@ import {
   FEATURED_LEAGUE_NAMES,
   FINISHED_API_STATUSES,
   LIVE_API_STATUSES,
+  MAX_LEAGUES,
+  MAX_MATCHES_PER_LEAGUE,
   MAX_VISIBLE_MATCHES,
   UPCOMING_API_STATUSES,
 } from '../config/football.js'
@@ -60,6 +62,83 @@ export function adaptFixture(fixture) {
     featured: false,
     source: 'api',
   }
+}
+
+export function adaptFeedFixture(item) {
+  if (!item?.id || !item.homeTeam || !item.awayTeam) return null
+  const short = item.apiStatus || ''
+  if (EXCLUDED_API_STATUSES.includes(short)) return null
+  const status = mapApiStatus(short)
+  if (!status) return null
+  const elapsed = Number.isFinite(item.elapsed) ? item.elapsed : null
+  const extra = Number.isFinite(item.extra) ? item.extra : null
+  const scored = status === 'LIVE' || status === 'HT' || status === 'FINISHED'
+  return {
+    id: item.id,
+    externalId: item.id,
+    leagueId: item.leagueId ?? null,
+    league: item.league || '',
+    leagueLogo: item.leagueLogo || '',
+    country: item.country || '',
+    homeTeam: item.homeTeam,
+    homeTeamId: item.homeTeamId ?? null,
+    homeLogo: item.homeLogo || '',
+    awayTeam: item.awayTeam,
+    awayTeamId: item.awayTeamId ?? null,
+    awayLogo: item.awayLogo || '',
+    homeScore: scored && item.homeScore !== null && item.homeScore !== undefined ? item.homeScore : null,
+    awayScore: scored && item.awayScore !== null && item.awayScore !== undefined ? item.awayScore : null,
+    status,
+    apiStatus: short,
+    minute: minuteLabel(status, elapsed, extra),
+    kickoff: '',
+    kickoffAt: item.kickoffAt || '',
+    featured: false,
+    source: 'feed',
+  }
+}
+
+function calendarDay(date, timeZone) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+  } catch {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+  }
+}
+
+export function isLocalToday(match, timeZone = 'UTC', now = new Date()) {
+  if (!match?.kickoffAt) return true
+  const date = new Date(match.kickoffAt)
+  if (Number.isNaN(date.getTime())) return true
+  return calendarDay(date, timeZone) === calendarDay(now, timeZone)
+}
+
+export function groupByLeague(matches, timeZone = 'UTC', now = new Date()) {
+  const buckets = new Map()
+  matches.filter((match) => isLocalToday(match, timeZone, now)).forEach((match) => {
+    const key = match.leagueId ?? match.league
+    if (!buckets.has(key)) {
+      buckets.set(key, {
+        id: key,
+        name: match.league,
+        logo: match.leagueLogo || '',
+        country: match.country || '',
+        matches: [],
+      })
+    }
+    const group = buckets.get(key)
+    group.matches.push(match)
+    if (!group.logo && match.leagueLogo) group.logo = match.leagueLogo
+    if (!group.country && match.country) group.country = match.country
+  })
+  const rank = (id) => {
+    const index = FEATURED_LEAGUE_IDS.indexOf(id)
+    return index === -1 ? FEATURED_LEAGUE_IDS.length : index
+  }
+  return [...buckets.values()]
+    .map((group) => ({ ...group, matches: sortMatches(group.matches).slice(0, MAX_MATCHES_PER_LEAGUE) }))
+    .sort((left, right) => rank(left.id) - rank(right.id) || left.name.localeCompare(right.name))
+    .slice(0, MAX_LEAGUES)
 }
 
 function fallbackKickoffAt(kickoff) {
