@@ -37,7 +37,7 @@ const submit = async () => {
       <button class="back-link" @click="router.back()"><span aria-hidden="true">←</span> {{ t('back') }}</button>
       <Transition name="hero-slide" mode="out-in">
         <section v-if="!success" key="form" class="register-card">
-          <div class="register-orbit"><span>12</span><small>MONTHS</small></div>
+          <div class="register-orbit"><span>12</span><small>{{ t('monthsShort') }}</small></div>
           <span class="eyebrow">HOXF SPORT TV VIP</span><h1>{{ t('createAccount') }}</h1><p>{{ t('claimSubtitle') }}</p>
           <form @submit.prevent="submit">
             <label>{{ t('name') }}<input v-model="form.name" autocomplete="name" :placeholder="t('name')" /></label>

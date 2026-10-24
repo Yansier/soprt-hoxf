@@ -1,10 +1,12 @@
+import { gaps } from './gaps.js'
+
 export const languages = [
   ['en', 'EN', 'English'], ['es', 'ES', 'Español'], ['pt', 'PT', 'Português'], ['fr', 'FR', 'Français'], ['de', 'DE', 'Deutsch'],
   ['it', 'IT', 'Italiano'], ['zh-CN', '简', '简体中文'], ['zh-TW', '繁', '繁體中文'], ['ja', '日', '日本語'], ['ko', '한', '한국어'],
   ['ar', 'AR', 'العربية'], ['th', 'TH', 'ไทย'], ['vi', 'VI', 'Tiếng Việt'], ['id', 'ID', 'Bahasa Indonesia'], ['tr', 'TR', 'Türkçe'],
 ].map(([code, short, label]) => ({ code, short, label }))
 
-const en = {
+export const en = {
   signIn: 'Sign In', language: 'Language', liveNow: 'Live now', upcoming: 'Upcoming', watchLive: 'Watch live', enterMatch: 'Enter match',
   liveMatches: 'Live matches', today: 'Today', results: 'Results', topLeagues: 'Top leagues', limitedOffer: 'Limited VIP offer',
   freeAccess: '12 Months Free Football Access', passesRemaining: 'VIP passes remaining', claimVip: 'Claim free VIP', vipActive: 'VIP active',
@@ -25,6 +27,7 @@ const en = {
   logout: 'Log out', account: 'Account', accountVip: 'VIP active', offerEndsIn: 'Registration window closes in', offerClosesIn: 'Offer closes in',
   checkingAvailability: 'Checking VIP availability...', reloginHint: 'If the issue continues, try signing out and signing in again.',
   signOutRelogin: 'Sign out & sign in again', signedOut: 'Signed out', vipMembership: 'VIP membership', vipEnjoy: 'Enjoy full access to HOXF SPORT TV',
+  updatedAt: 'Updated {time}', tomorrowLabel: 'Tomorrow', fourScreens: '4 screens', monthsShort: 'Months', halfTime: 'HT', fullTime: 'FT',
 }
 
 const phase12 = {
@@ -32,7 +35,7 @@ const phase12 = {
   pt: { logout:'Sair', account:'Conta', accountVip:'VIP ativo', offerEndsIn:'A janela de registo fecha em', offerClosesIn:'A oferta termina em', checkingAvailability:'A verificar disponibilidade VIP...', reloginHint:'Se o problema continuar, termine a sessão e inicie sessão novamente.', signOutRelogin:'Sair e entrar novamente', signedOut:'Sessão terminada', vipMembership:'Assinatura VIP', vipEnjoy:'Aproveite o acesso completo ao HOXF SPORT TV' },
   fr: { logout:'Déconnexion', account:'Compte', accountVip:'VIP actif', offerEndsIn:'La fenêtre d’inscription se ferme dans', offerClosesIn:'L’offre se termine dans', checkingAvailability:'Vérification de la disponibilité VIP...', reloginHint:'Si le problème continue, déconnectez-vous puis reconnectez-vous.', signOutRelogin:'Se déconnecter et se reconnecter', signedOut:'Déconnecté', vipMembership:'Abonnement VIP', vipEnjoy:'Profitez de l’accès complet à HOXF SPORT TV' },
   de: { logout:'Abmelden', account:'Konto', accountVip:'VIP aktiv', offerEndsIn:'Registrierung endet in', offerClosesIn:'Angebot endet in', checkingAvailability:'VIP-Verfügbarkeit wird geprüft...', reloginHint:'Wenn das Problem bleibt, melde dich ab und wieder an.', signOutRelogin:'Abmelden und erneut anmelden', signedOut:'Abgemeldet', vipMembership:'VIP-Mitgliedschaft', vipEnjoy:'Voller Zugang zu HOXF SPORT TV' },
-  it: { logout:'Esci', account:'Account', accountVip:'VIP attivo', offerEndsIn:'La registrazione chiude tra', offerClosesIn:'L’offerta scade tra', checkingAvailability:'Verifica disponibilità VIP...', reloginHint:'Se il problema continua, esci e accedi di nuovo.', signOutRelogin:'Esci e accedi di nuovo', signedOut:'Disconnesso', vipMembership:'Abbonamento VIP', vipEnjoy:'Accesso completo a HOXF SPORT TV' },
+  it: { logout:'Esci', account:'Profilo', accountVip:'VIP attivo', offerEndsIn:'La registrazione chiude tra', offerClosesIn:'L’offerta scade tra', checkingAvailability:'Verifica disponibilità VIP...', reloginHint:'Se il problema continua, esci e accedi di nuovo.', signOutRelogin:'Esci e accedi di nuovo', signedOut:'Disconnesso', vipMembership:'Abbonamento VIP', vipEnjoy:'Accesso completo a HOXF SPORT TV' },
   'zh-CN': { logout:'退出登录', account:'账户', accountVip:'VIP 已激活', offerEndsIn:'注册窗口即将关闭', offerClosesIn:'优惠结束倒计时', checkingAvailability:'正在检查 VIP 名额...', reloginHint:'如果问题持续，请尝试退出账号后重新登录。', signOutRelogin:'退出并重新登录', signedOut:'已退出登录', vipMembership:'VIP 会员', vipEnjoy:'畅享 HOXF SPORT TV 全部内容' },
   'zh-TW': { logout:'登出', account:'帳戶', accountVip:'VIP 已啟用', offerEndsIn:'註冊窗口即將關閉', offerClosesIn:'優惠結束倒數', checkingAvailability:'正在檢查 VIP 名額...', reloginHint:'如果問題持續，請嘗試登出帳號後重新登入。', signOutRelogin:'登出並重新登入', signedOut:'已登出', vipMembership:'VIP 會員', vipEnjoy:'暢享 HOXF SPORT TV 全部內容' },
   ja: { logout:'ログアウト', account:'アカウント', accountVip:'VIP有効', offerEndsIn:'登録受付の終了まで', offerClosesIn:'オファー終了まで', checkingAvailability:'VIPの空きを確認中...', reloginHint:'問題が続く場合は、一度ログアウトして再度ログインしてください。', signOutRelogin:'ログアウトして再ログイン', signedOut:'ログアウトしました', vipMembership:'VIPメンバー', vipEnjoy:'HOXF SPORT TV をフルで楽しめます' },
@@ -61,4 +64,5 @@ const translated = {
   tr: { signIn:'Giriş yap',language:'Dil',liveNow:'Canlı',upcoming:'Yakında',watchLive:'Canlı izle',enterMatch:'Maça gir',liveMatches:'Canlı maçlar',today:'Bugün',results:'Sonuçlar',topLeagues:'En iyi ligler',limitedOffer:'Sınırlı VIP teklifi',freeAccess:'12 ay ücretsiz futbol',passesRemaining:'Kalan VIP hakkı',claimVip:'Ücretsiz VIP al',vipActive:'VIP aktif',daysRemaining:'{count} gün kaldı',registerNow:'Şimdi kaydol',maybeLater:'Belki sonra',why:'Neden HOXF SPORT TV',neverMiss:'Hiçbir maçı kaçırma',getFreeVip:'Ücretsiz VIP al',joinNow:'Şimdi katıl',createAccount:'Hesabını oluştur',claimSubtitle:'12 aylık ücretsiz VIP al',name:'Ad',email:'E-posta',verification:'Doğrulama kodu',registerClaim:'Kaydol ve VIP al',creating:'Hesabın oluşturuluyor...',activated:'VIP etkinleştirildi',validUntil:'VIP geçerlilik tarihi',enterHoxf:'HOXF SPORT TV’ye gir' },
 }
 
-export const locales = Object.fromEntries(languages.map(({ code }) => [code, { ...en, ...(translated[code] || {}), ...(phase12[code] || {}) }]))
+export const localeSources = { translated, phase12, gaps }
+export const locales = Object.fromEntries(languages.map(({ code }) => [code, { ...en, ...(translated[code] || {}), ...(phase12[code] || {}), ...(gaps[code] || {}) }]))

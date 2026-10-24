@@ -353,7 +353,12 @@ button.user-chip {
   -webkit-line-clamp: 2;
 }
 
-.hero-team:last-child { text-align: end; }
+.hero-side { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.hero-side.away { align-items: flex-end; }
+.hero-side.away .hero-team { text-align: end; }
+.hero-mark.team-logo { width: 46px; height: 46px; flex-basis: 46px; }
+.hero-mark.team-logo img { width: 32px; height: 32px; }
+.hero-empty { min-height: 180px; align-items: center; justify-content: center; }
 
 .hero-score {
   min-width: 74px;
@@ -665,7 +670,7 @@ button.user-chip {
 .teams-row {
   direction: ltr;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   margin: 10px 0 8px;
@@ -682,7 +687,14 @@ button.user-chip {
 }
 
 .team.away { flex-direction: row-reverse; text-align: end; }
-.team b { min-width: 0; overflow-wrap: anywhere; }
+.team b {
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 
 .team-logo {
   display: grid;
@@ -696,9 +708,47 @@ button.user-chip {
   color: var(--brand-primary);
   font: 700 10px/1 var(--font-display);
   font-stretch: condensed;
+  overflow: hidden;
 }
 
-.card-score { text-align: center; font-variant-numeric: tabular-nums; }
+.team-logo img,
+.league-logo {
+  object-fit: contain;
+}
+
+.team-logo img { width: 18px; height: 18px; }
+
+.league-logo { width: 14px; height: 14px; flex: none; }
+
+.league-name,
+.league-kicker {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.league-name b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.updated-at {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+input[type="email"],
+.feature-grid small { direction: ltr; unicode-bidi: isolate; }
+
+.card-score { text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .card-score strong {
   display: flex;
@@ -709,7 +759,7 @@ button.user-chip {
 }
 
 .card-score em { color: var(--text-secondary); font-style: normal; }
-.card-score span { color: var(--text-secondary); font: 700 12px/1 var(--font-display); font-stretch: condensed; }
+.card-score span { color: var(--text-secondary); font: 700 14px/1 var(--font-display); font-stretch: condensed; white-space: nowrap; }
 
 .outline-button {
   width: 100%;
@@ -747,6 +797,10 @@ button.user-chip {
 
 .league-strip button {
   flex: none;
+  max-width: 168px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid var(--border-color);

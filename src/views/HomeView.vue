@@ -8,10 +8,17 @@ import PromoModal from '../components/PromoModal.vue'
 import ActivityToast from '../components/ActivityToast.vue'
 import BottomVipBar from '../components/BottomVipBar.vue'
 import { activityUsers } from '../data/activityUsers'
-import { t } from '../i18n'
+import { useFootballData } from '../composables/useFootballData'
+import { currentLanguage, t } from '../i18n'
 import { randomInt } from '../utils/random'
 
 const app = inject('app')
+const { matches, featured, leagues, lastUpdated, usingFallback } = useFootballData()
+const updatedLabel = computed(() => {
+  if (usingFallback.value || !lastUpdated.value) return ''
+  const time = new Intl.DateTimeFormat(currentLanguage.value, { hour: '2-digit', minute: '2-digit' }).format(new Date(lastUpdated.value))
+  return t('updatedAt', { time })
+})
 const readCount = () => {
   const stored = Number(sessionStorage.getItem('hoxf_vip_spots'))
   return stored >= 120 ? stored : randomInt(420, 820)
@@ -41,7 +48,7 @@ const closePromo = () => { promoOpen.value = false; sessionStorage.setItem('hoxf
 
 const featureItems = computed(() => [
   { icon: '◫', title: t('hdStream'), text: '1080p' }, { icon: '↯', title: t('lowLatency'), text: '< 3s' },
-  { icon: '▣', title: t('multiDevice'), text: '4 screens' }, { icon: '◎', title: t('worldwide'), text: '24/7' },
+  { icon: '▣', title: t('multiDevice'), text: t('fourScreens') }, { icon: '◎', title: t('worldwide'), text: '24/7' },
 ])
 
 onMounted(() => {
@@ -55,9 +62,9 @@ onBeforeUnmount(() => [countTimer, activityTimer, activityHideTimer, promoTimer]
   <div class="page home-page">
     <AppHeader />
     <main>
-      <HeroCarousel />
+      <HeroCarousel :matches="featured" />
       <div class="section-pad vip-wrap"><VipCounter :count="count" /></div>
-      <LeagueTabs />
+      <LeagueTabs :matches="matches" :leagues="leagues" :updated-label="updatedLabel" />
       <section class="why-section section-pad"><span class="eyebrow">HOXF STANDARD</span><h2>{{ t('why') }}</h2><div class="feature-grid"><article v-for="item in featureItems" :key="item.title"><span>{{ item.icon }}</span><b>{{ item.title }}</b><small>{{ item.text }}</small></article></div></section>
       <section class="final-cta"><span class="stadium-lines"></span><div class="eyebrow">HOXF SPORT TV</div><h2>{{ t('neverMiss') }}</h2><p>{{ t('neverMissBody') }}</p><strong>{{ t('twelveFree') }}</strong><button class="primary-button full" @click="app.claimVip">{{ app.loggedIn.value ? t('vipActive') : t('getFreeVip') }}</button></section>
     </main>
