@@ -1,5 +1,5 @@
 <script setup>
-import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppHeader from '../components/AppHeader.vue'
 import HeroCarousel from '../components/HeroCarousel.vue'
 import VipCounter from '../components/VipCounter.vue'
@@ -46,6 +46,18 @@ const scheduleActivity = (first = false) => {
   }, first ? randomInt(4000, 8000) : randomInt(9000, 25000))
 }
 const closePromo = () => { promoOpen.value = false; sessionStorage.setItem('hoxf_promo_seen', '1') }
+const promoBlocked = () => Boolean(app.loggedIn.value || sessionStorage.getItem('hoxf_promo_seen') || app.safariGuardEligible.value)
+const clearPromoTimer = () => { clearTimeout(promoTimer); promoTimer = 0 }
+const schedulePromo = () => {
+  clearPromoTimer()
+  if (promoBlocked()) return
+  promoTimer = setTimeout(() => {
+    promoTimer = 0
+    if (promoBlocked()) return
+    promoOpen.value = true
+    sessionStorage.setItem('hoxf_promo_seen', '1')
+  }, 1000)
+}
 
 const featureItems = computed(() => [
   { icon: '◫', title: t('hdStream'), text: '1080p' }, { icon: '↯', title: t('lowLatency'), text: '< 3s' },
@@ -54,7 +66,15 @@ const featureItems = computed(() => [
 
 onMounted(() => {
   scheduleCount(); scheduleActivity(true)
-  if (!app.loggedIn.value && !sessionStorage.getItem('hoxf_promo_seen')) promoTimer = setTimeout(() => { promoOpen.value = true; sessionStorage.setItem('hoxf_promo_seen', '1') }, 1000)
+  schedulePromo()
+})
+watch(() => app.safariGuardEligible.value, (active) => {
+  if (active) {
+    clearPromoTimer()
+    promoOpen.value = false
+    return
+  }
+  if (!promoOpen.value) schedulePromo()
 })
 onBeforeUnmount(() => [countTimer, activityTimer, activityHideTimer, promoTimer].forEach(clearTimeout))
 </script>

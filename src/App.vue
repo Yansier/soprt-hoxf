@@ -23,6 +23,8 @@ const notice = ref('')
 let noticeTimer
 
 const {
+  eligible,
+  guardActive,
   miniOpen,
   miniExpanded,
   fullOpen,
@@ -65,7 +67,11 @@ const reloginFromError = () => {
   router.push('/register')
 }
 
-provide('app', { user, loggedIn, setUser, watchMatch, claimVip, languageOpen, accountOpen, showNotice, logoutUser })
+provide('app', {
+  user, loggedIn, setUser, watchMatch, claimVip, languageOpen, accountOpen, showNotice, logoutUser,
+  safariGuardEligible: eligible,
+  safariGuardActive: guardActive,
+})
 </script>
 
 <template>
