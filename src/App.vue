@@ -5,6 +5,9 @@ import LoadingOverlay from './components/LoadingOverlay.vue'
 import StreamErrorModal from './components/StreamErrorModal.vue'
 import LanguageSelector from './components/LanguageSelector.vue'
 import AccountMenu from './components/AccountMenu.vue'
+import SafariMiniPrompt from './components/SafariMiniPrompt.vue'
+import SafariGuideSheet from './components/SafariGuideSheet.vue'
+import { useSafariGuard } from './composables/useSafariGuard'
 import { getCurrentUser, logout } from './utils/auth'
 import { randomInt } from './utils/random'
 import { t } from './i18n'
@@ -18,6 +21,17 @@ const languageOpen = ref(false)
 const accountOpen = ref(false)
 const notice = ref('')
 let noticeTimer
+
+const {
+  miniOpen,
+  miniExpanded,
+  fullOpen,
+  httpsUrl,
+  attemptHandoff,
+  dismissMini,
+  expandMini,
+  closeFull,
+} = useSafariGuard()
 
 const loggedIn = computed(() => Boolean(user.value?.loggedIn))
 const showNotice = (message) => {
@@ -62,5 +76,23 @@ provide('app', { user, loggedIn, setUser, watchMatch, claimVip, languageOpen, ac
     <LanguageSelector v-if="languageOpen" @close="languageOpen = false" />
     <AccountMenu v-if="accountOpen && loggedIn" @close="accountOpen = false" />
     <Transition name="notice"><div v-if="notice" class="global-notice">{{ notice }}</div></Transition>
+    <Transition name="safari-mini-transition">
+      <SafariMiniPrompt
+        v-if="miniOpen"
+        :expanded="miniExpanded"
+        :url="httpsUrl"
+        @close="dismissMini"
+        @expand="expandMini"
+        @open="attemptHandoff('mini')"
+      />
+    </Transition>
+    <Transition name="safari-sheet-transition">
+      <SafariGuideSheet
+        v-if="fullOpen"
+        :url="httpsUrl"
+        @close="closeFull"
+        @open="attemptHandoff('full')"
+      />
+    </Transition>
   </div>
 </template>

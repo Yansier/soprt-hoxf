@@ -29,6 +29,12 @@ export const en = {
   signOutRelogin: 'Sign out & sign in again', signedOut: 'Signed out', vipMembership: 'VIP membership', vipEnjoy: 'Enjoy full access to HOXF SPORT TV',
   updatedAt: 'Updated {time}', tomorrowLabel: 'Tomorrow', fourScreens: '4 screens', monthsShort: 'Months', halfTime: 'HT', fullTime: 'FT',
   todaysMatches: "Today's matches", matchesCount: '{count} matches', matchEnded: 'Match ended', schedule: 'Schedule',
+  safariMiniTitle: 'Safari', safariMiniBody: 'Continue in Safari for the complete experience.', openInSafari: 'Open in Safari',
+  safariOtherMethods: "Didn't open? Try another way", safariInstructions: 'Other ways to continue', copySafariLink: 'Copy page link',
+  safariCopied: 'Link copied', safariCopyFailed: 'Copy unavailable. Select the link below.', safariGuideTitle: 'Open in Safari to continue',
+  safariGuideBody: 'Use Safari to open this page and get the complete browsing experience.',
+  safariGuideStep1: 'Tap the … menu in the top-right of the Facebook browser.', safariGuideStep2: 'Choose Open in browser or Open in Safari.',
+  safariGuideStep3: 'If it does not switch, copy this page link and paste it into Safari.', safariClose: 'Close Safari guide',
 }
 
 const phase12 = {
@@ -82,5 +88,50 @@ const phase25 = {
   tr: { todaysMatches: 'Bugünün maçları', matchesCount: '{count} maç', matchEnded: 'Maç bitti', schedule: 'Fikstür' },
 }
 
-export const localeSources = { translated, phase12, gaps, phase25 }
-export const locales = Object.fromEntries(languages.map(({ code }) => [code, { ...en, ...(translated[code] || {}), ...(phase12[code] || {}), ...(gaps[code] || {}), ...(phase25[code] || {}) }]))
+const safariGuide = {
+  es: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Continúa en Safari para disfrutar de la experiencia completa.', openInSafari: 'Abrir en Safari', safariOtherMethods: '¿No se abrió? Prueba otro método', safariInstructions: 'Otras formas de continuar', copySafariLink: 'Copiar enlace de la página', safariCopied: 'Enlace copiado', safariCopyFailed: 'No se pudo copiar. Selecciona el enlace de abajo.', safariGuideTitle: 'Abre en Safari para continuar', safariGuideBody: 'Abre esta página en Safari para disfrutar de la experiencia completa.', safariGuideStep1: 'Toca el menú … en la esquina superior derecha del navegador de Facebook.', safariGuideStep2: 'Elige Abrir en el navegador o Abrir en Safari.', safariGuideStep3: 'Si no cambia, copia el enlace de esta página y pégalo en Safari.', safariClose: 'Cerrar la guía de Safari',
+  },
+  pt: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Continue no Safari para ter a experiência completa.', openInSafari: 'Abrir no Safari', safariOtherMethods: 'Não abriu? Tente outra forma', safariInstructions: 'Outras formas de continuar', copySafariLink: 'Copiar link da página', safariCopied: 'Link copiado', safariCopyFailed: 'Não foi possível copiar. Selecione o link abaixo.', safariGuideTitle: 'Abra no Safari para continuar', safariGuideBody: 'Abra esta página no Safari para ter a experiência de navegação completa.', safariGuideStep1: 'Toque no menu … no canto superior direito do navegador do Facebook.', safariGuideStep2: 'Escolha Abrir no navegador ou Abrir no Safari.', safariGuideStep3: 'Se não mudar, copie o link desta página e cole no Safari.', safariClose: 'Fechar guia do Safari',
+  },
+  fr: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Continuez dans Safari pour profiter de l’expérience complète.', openInSafari: 'Ouvrir dans Safari', safariOtherMethods: 'Rien ne s’est ouvert ? Essayez autrement', safariInstructions: 'Autres façons de continuer', copySafariLink: 'Copier le lien de la page', safariCopied: 'Lien copié', safariCopyFailed: 'Copie impossible. Sélectionnez le lien ci-dessous.', safariGuideTitle: 'Ouvrez dans Safari pour continuer', safariGuideBody: 'Ouvrez cette page dans Safari pour profiter de l’expérience de navigation complète.', safariGuideStep1: 'Touchez le menu … en haut à droite du navigateur Facebook.', safariGuideStep2: 'Choisissez Ouvrir dans le navigateur ou Ouvrir dans Safari.', safariGuideStep3: 'Si rien ne change, copiez le lien de cette page et collez-le dans Safari.', safariClose: 'Fermer le guide Safari',
+  },
+  de: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Für das vollständige Erlebnis in Safari fortfahren.', openInSafari: 'In Safari öffnen', safariOtherMethods: 'Nicht geöffnet? Andere Methode versuchen', safariInstructions: 'Weitere Möglichkeiten', copySafariLink: 'Seitenlink kopieren', safariCopied: 'Link kopiert', safariCopyFailed: 'Kopieren nicht möglich. Wähle den Link unten aus.', safariGuideTitle: 'Zum Fortfahren in Safari öffnen', safariGuideBody: 'Öffne diese Seite in Safari, um das vollständige Browser-Erlebnis zu erhalten.', safariGuideStep1: 'Tippe oben rechts im Facebook-Browser auf das Menü ….', safariGuideStep2: 'Wähle Im Browser öffnen oder In Safari öffnen.', safariGuideStep3: 'Falls kein Wechsel erfolgt, kopiere den Seitenlink und füge ihn in Safari ein.', safariClose: 'Safari-Anleitung schließen',
+  },
+  it: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Continua in Safari per un’esperienza completa.', openInSafari: 'Apri in Safari', safariOtherMethods: 'Non si è aperto? Prova un altro metodo', safariInstructions: 'Altri modi per continuare', copySafariLink: 'Copia link della pagina', safariCopied: 'Link copiato', safariCopyFailed: 'Impossibile copiare. Seleziona il link qui sotto.', safariGuideTitle: 'Apri in Safari per continuare', safariGuideBody: 'Apri questa pagina in Safari per ottenere l’esperienza di navigazione completa.', safariGuideStep1: 'Tocca il menu … in alto a destra nel browser di Facebook.', safariGuideStep2: 'Scegli Apri nel browser o Apri in Safari.', safariGuideStep3: 'Se non cambia, copia il link della pagina e incollalo in Safari.', safariClose: 'Chiudi la guida Safari',
+  },
+  'zh-CN': {
+    safariMiniTitle: 'Safari', safariMiniBody: '在 Safari 中继续浏览，获得完整体验。', openInSafari: '在 Safari 中打开', safariOtherMethods: '没有拉起 Safari？试试其他方法', safariInstructions: '其他打开方式', copySafariLink: '复制当前页面地址', safariCopied: '链接已复制', safariCopyFailed: '无法自动复制，请选择下方链接。', safariGuideTitle: '在 Safari 中打开以继续', safariGuideBody: '使用 Safari 打开此页面，获得完整浏览体验。', safariGuideStep1: '点击 Facebook 浏览器右上角的 … 菜单。', safariGuideStep2: '选择“在浏览器中打开”或“在 Safari 中打开”。', safariGuideStep3: '如果仍然无法切换，请复制页面链接并粘贴到 Safari。', safariClose: '关闭 Safari 引导',
+  },
+  'zh-TW': {
+    safariMiniTitle: 'Safari', safariMiniBody: '在 Safari 中繼續瀏覽，獲得完整體驗。', openInSafari: '在 Safari 中開啟', safariOtherMethods: '沒有開啟 Safari？試試其他方法', safariInstructions: '其他開啟方式', copySafariLink: '複製目前頁面連結', safariCopied: '連結已複製', safariCopyFailed: '無法自動複製，請選取下方連結。', safariGuideTitle: '在 Safari 中開啟以繼續', safariGuideBody: '使用 Safari 開啟此頁面，獲得完整瀏覽體驗。', safariGuideStep1: '點擊 Facebook 瀏覽器右上角的 … 選單。', safariGuideStep2: '選擇「在瀏覽器中開啟」或「在 Safari 中開啟」。', safariGuideStep3: '如果仍無法切換，請複製頁面連結並貼到 Safari。', safariClose: '關閉 Safari 引導',
+  },
+  ja: {
+    safariMiniTitle: 'Safari', safariMiniBody: '完全な体験のためSafariで続けてください。', openInSafari: 'Safariで開く', safariOtherMethods: '開きませんか？別の方法を試す', safariInstructions: 'その他の開き方', copySafariLink: 'ページリンクをコピー', safariCopied: 'リンクをコピーしました', safariCopyFailed: 'コピーできません。下のリンクを選択してください。', safariGuideTitle: 'Safariで開いて続ける', safariGuideBody: 'このページをSafariで開くと、すべての機能を利用できます。', safariGuideStep1: 'Facebookブラウザ右上の … メニューをタップします。', safariGuideStep2: '「ブラウザで開く」または「Safariで開く」を選びます。', safariGuideStep3: '切り替わらない場合は、ページリンクをコピーしてSafariに貼り付けます。', safariClose: 'Safariガイドを閉じる',
+  },
+  ko: {
+    safariMiniTitle: 'Safari', safariMiniBody: '전체 기능을 이용하려면 Safari에서 계속하세요.', openInSafari: 'Safari에서 열기', safariOtherMethods: '열리지 않나요? 다른 방법 시도', safariInstructions: '다른 방법으로 계속하기', copySafariLink: '페이지 링크 복사', safariCopied: '링크가 복사되었습니다', safariCopyFailed: '복사할 수 없습니다. 아래 링크를 선택하세요.', safariGuideTitle: '계속하려면 Safari에서 열기', safariGuideBody: '이 페이지를 Safari에서 열어 전체 탐색 기능을 이용하세요.', safariGuideStep1: 'Facebook 브라우저 오른쪽 위의 … 메뉴를 누르세요.', safariGuideStep2: '브라우저에서 열기 또는 Safari에서 열기를 선택하세요.', safariGuideStep3: '전환되지 않으면 페이지 링크를 복사해 Safari에 붙여 넣으세요.', safariClose: 'Safari 안내 닫기',
+  },
+  ar: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'تابع في Safari للحصول على التجربة الكاملة.', openInSafari: 'فتح في Safari', safariOtherMethods: 'لم يفتح؟ جرّب طريقة أخرى', safariInstructions: 'طرق أخرى للمتابعة', copySafariLink: 'نسخ رابط الصفحة', safariCopied: 'تم نسخ الرابط', safariCopyFailed: 'تعذر النسخ. حدّد الرابط أدناه.', safariGuideTitle: 'افتح في Safari للمتابعة', safariGuideBody: 'افتح هذه الصفحة في Safari للحصول على تجربة التصفح الكاملة.', safariGuideStep1: 'اضغط على قائمة … أعلى يمين متصفح Facebook.', safariGuideStep2: 'اختر فتح في المتصفح أو فتح في Safari.', safariGuideStep3: 'إذا لم يتم الانتقال، انسخ رابط الصفحة والصقه في Safari.', safariClose: 'إغلاق دليل Safari',
+  },
+  th: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'เปิดต่อใน Safari เพื่อใช้งานได้อย่างสมบูรณ์', openInSafari: 'เปิดใน Safari', safariOtherMethods: 'ยังไม่เปิดใช่ไหม ลองวิธีอื่น', safariInstructions: 'วิธีอื่นในการใช้งานต่อ', copySafariLink: 'คัดลอกลิงก์หน้านี้', safariCopied: 'คัดลอกลิงก์แล้ว', safariCopyFailed: 'คัดลอกไม่ได้ โปรดเลือกลิงก์ด้านล่าง', safariGuideTitle: 'เปิดใน Safari เพื่อดำเนินการต่อ', safariGuideBody: 'เปิดหน้านี้ใน Safari เพื่อประสบการณ์การใช้งานที่สมบูรณ์', safariGuideStep1: 'แตะเมนู … ที่มุมขวาบนของเบราว์เซอร์ Facebook', safariGuideStep2: 'เลือกเปิดในเบราว์เซอร์หรือเปิดใน Safari', safariGuideStep3: 'หากยังไม่สลับ ให้คัดลอกลิงก์หน้านี้แล้ววางใน Safari', safariClose: 'ปิดคำแนะนำ Safari',
+  },
+  vi: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Tiếp tục trong Safari để có trải nghiệm đầy đủ.', openInSafari: 'Mở trong Safari', safariOtherMethods: 'Chưa mở? Hãy thử cách khác', safariInstructions: 'Các cách khác để tiếp tục', copySafariLink: 'Sao chép liên kết trang', safariCopied: 'Đã sao chép liên kết', safariCopyFailed: 'Không thể sao chép. Hãy chọn liên kết bên dưới.', safariGuideTitle: 'Mở trong Safari để tiếp tục', safariGuideBody: 'Mở trang này trong Safari để có trải nghiệm duyệt web đầy đủ.', safariGuideStep1: 'Chạm vào menu … ở góc trên bên phải của trình duyệt Facebook.', safariGuideStep2: 'Chọn Mở trong trình duyệt hoặc Mở trong Safari.', safariGuideStep3: 'Nếu không chuyển, hãy sao chép liên kết trang và dán vào Safari.', safariClose: 'Đóng hướng dẫn Safari',
+  },
+  id: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Lanjutkan di Safari untuk pengalaman lengkap.', openInSafari: 'Buka di Safari', safariOtherMethods: 'Belum terbuka? Coba cara lain', safariInstructions: 'Cara lain untuk melanjutkan', copySafariLink: 'Salin tautan halaman', safariCopied: 'Tautan disalin', safariCopyFailed: 'Tidak dapat menyalin. Pilih tautan di bawah.', safariGuideTitle: 'Buka di Safari untuk melanjutkan', safariGuideBody: 'Buka halaman ini di Safari untuk pengalaman penelusuran lengkap.', safariGuideStep1: 'Ketuk menu … di kanan atas browser Facebook.', safariGuideStep2: 'Pilih Buka di browser atau Buka di Safari.', safariGuideStep3: 'Jika tidak beralih, salin tautan halaman lalu tempel di Safari.', safariClose: 'Tutup panduan Safari',
+  },
+  tr: {
+    safariMiniTitle: 'Safari', safariMiniBody: 'Tam deneyim için Safari’de devam edin.', openInSafari: 'Safari’de aç', safariOtherMethods: 'Açılmadı mı? Başka bir yol deneyin', safariInstructions: 'Devam etmenin diğer yolları', copySafariLink: 'Sayfa bağlantısını kopyala', safariCopied: 'Bağlantı kopyalandı', safariCopyFailed: 'Kopyalanamadı. Aşağıdaki bağlantıyı seçin.', safariGuideTitle: 'Devam etmek için Safari’de açın', safariGuideBody: 'Tam tarama deneyimi için bu sayfayı Safari’de açın.', safariGuideStep1: 'Facebook tarayıcısının sağ üstündeki … menüsüne dokunun.', safariGuideStep2: 'Tarayıcıda aç veya Safari’de aç seçeneğini belirleyin.', safariGuideStep3: 'Geçiş olmazsa sayfa bağlantısını kopyalayıp Safari’ye yapıştırın.', safariClose: 'Safari rehberini kapat',
+  },
+}
+
+export const localeSources = { translated, phase12, gaps, phase25, safariGuide }
+export const locales = Object.fromEntries(languages.map(({ code }) => [code, { ...en, ...(translated[code] || {}), ...(phase12[code] || {}), ...(gaps[code] || {}), ...(phase25[code] || {}), ...(safariGuide[code] || {}) }]))
