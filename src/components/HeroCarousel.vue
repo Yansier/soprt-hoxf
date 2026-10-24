@@ -21,17 +21,18 @@ onBeforeUnmount(() => clearInterval(timer))
         <div class="hero-topline">
           <span class="league-kicker">{{ current.league }}</span>
           <span :class="['status-pill', { live: current.status === 'LIVE' }]">
-            <i v-if="current.status === 'LIVE'"></i>{{ current.status === 'LIVE' ? t('liveNow') : t('upcoming') }}
+            <i v-if="current.status === 'LIVE'"></i>
+            <span>{{ current.status === 'LIVE' ? t('liveNow') : t('upcoming') }}</span>
+            <em v-if="current.minute" class="status-time">{{ current.minute }}</em>
           </span>
         </div>
-        <div class="hero-stage">
+        <div class="hero-stage" dir="ltr">
           <span class="hero-team">{{ current.homeTeam }}</span>
           <span class="hero-score" dir="ltr">{{ current.homeScore === null ? current.kickoff : `${current.homeScore} : ${current.awayScore}` }}</span>
           <span class="hero-team">{{ current.awayTeam }}</span>
         </div>
         <div class="hero-bottom">
-          <span class="match-clock">{{ current.minute || current.kickoff }}</span>
-          <button class="primary-button watch-button" @click="app.watchMatch(current)"><span class="play-icon">▶</span>{{ current.status === 'LIVE' ? t('watchLive') : t('enterMatch') }}</button>
+          <button class="primary-button watch-button" @click="app.watchMatch(current)"><span class="play-icon" aria-hidden="true">▶</span>{{ current.status === 'LIVE' ? t('watchLive') : t('enterMatch') }}</button>
         </div>
       </div>
     </Transition>

@@ -15,12 +15,12 @@ const router = useRouter()
     </button>
     <div class="header-actions">
       <button v-if="!app.loggedIn.value" class="text-button" @click="router.push('/register')">{{ t('signIn') }}</button>
-      <div v-else class="user-chip">
+      <button v-else type="button" class="user-chip" :aria-label="t('account')" @click="app.accountOpen.value = true">
         <span class="avatar">{{ app.user.value.name.charAt(0).toUpperCase() }}</span>
         <span class="user-name">{{ app.user.value.name.split(' ')[0] }}</span>
         <span class="vip-mini">VIP</span>
-      </div>
-      <button class="lang-button" :aria-label="t('language')" @click="app.languageOpen.value = true">◎ {{ currentLanguageMeta.short }}</button>
+      </button>
+      <button class="lang-button" :aria-label="t('language')" @click="app.languageOpen.value = true">{{ currentLanguageMeta.short }}</button>
     </div>
   </header>
 </template>

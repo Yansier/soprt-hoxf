@@ -34,7 +34,7 @@ const submit = async () => {
   <div class="page register-page">
     <AppHeader />
     <main class="register-main">
-      <button class="back-link" @click="router.back()">← {{ t('back') }}</button>
+      <button class="back-link" @click="router.back()"><span aria-hidden="true">←</span> {{ t('back') }}</button>
       <Transition name="hero-slide" mode="out-in">
         <section v-if="!success" key="form" class="register-card">
           <div class="register-orbit"><span>12</span><small>MONTHS</small></div>

@@ -56,7 +56,7 @@ onBeforeUnmount(() => [countTimer, activityTimer, activityHideTimer, promoTimer]
     <AppHeader />
     <main>
       <HeroCarousel />
-      <div class="section-pad"><VipCounter :count="count" /></div>
+      <div class="section-pad vip-wrap"><VipCounter :count="count" /></div>
       <LeagueTabs />
       <section class="why-section section-pad"><span class="eyebrow">HOXF STANDARD</span><h2>{{ t('why') }}</h2><div class="feature-grid"><article v-for="item in featureItems" :key="item.title"><span>{{ item.icon }}</span><b>{{ item.title }}</b><small>{{ item.text }}</small></article></div></section>
       <section class="final-cta"><span class="stadium-lines"></span><div class="eyebrow">HOXF SPORT TV</div><h2>{{ t('neverMiss') }}</h2><p>{{ t('neverMissBody') }}</p><strong>{{ t('twelveFree') }}</strong><button class="primary-button full" @click="app.claimVip">{{ app.loggedIn.value ? t('vipActive') : t('getFreeVip') }}</button></section>
