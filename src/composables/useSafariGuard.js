@@ -109,9 +109,12 @@ export function useSafariGuard() {
     if (source === 'full') {
       fullOpen.value = true
       scheduleFallback('full')
-    } else {
+    } else if (source === 'mini') {
       miniOpen.value = !miniDismissed.value
-      scheduleFallback('mini', source === 'mini')
+      scheduleFallback('mini', true)
+    } else {
+      miniOpen.value = false
+      scheduleFallback('mini', false)
     }
     if (previewMode.value) return
     try {
@@ -167,12 +170,6 @@ export function useSafariGuard() {
     window.addEventListener('pagehide', onPageHide)
     window.addEventListener('pageshow', onPageShow)
     if (!facebookAcquisitionEligible.value) return
-    if (previewMode.value) {
-      handoffAttempted.value = true
-      persist()
-      scheduleFallback('mini')
-      return
-    }
     if (!handoffAttempted.value) attemptHandoff('auto')
     else if (!miniDismissed.value) scheduleFallback('mini')
   })
