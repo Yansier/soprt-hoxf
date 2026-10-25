@@ -22,10 +22,14 @@ function getEnvironment() {
     '1': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
     'ios-facebook': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
     'ios-facebook-http': { isHttps: false, isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
-    'ios-chrome': { isIOS: true, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
+    'ios-chrome': { isIOS: true, isSafari: false, isChromeIOS: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
     android: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
     desktop: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
     'ios-safari': { isIOS: true, isSafari: true, isFacebookIOS: false, isAllowedBrowser: true, guideRequired: false, canAutoHandoffSafari: false },
+    'telegram-explicit': { isIOS: true, isSafari: false, isExplicitTelegram: true, isKnownInAppBrowser: true, definitelyBlockedBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
+    'telegram-safari-like': { isIOS: true, isSafari: true, isSafariLike: true, isExplicitTelegram: false, isKnownInAppBrowser: false, definitelyBlockedBrowser: false, isFacebookIOS: false, isAllowedBrowser: true, guideRequired: false, canAutoHandoffSafari: false },
+    instagram: { isIOS: true, isSafari: false, isInstagram: true, isKnownInAppBrowser: true, definitelyBlockedBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
+    messenger: { isIOS: true, isSafari: false, isMessenger: true, isKnownInAppBrowser: true, definitelyBlockedBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
   }
   return modes[preview]
     ? { ...detected, isHttps: true, ...modes[preview], preview }
