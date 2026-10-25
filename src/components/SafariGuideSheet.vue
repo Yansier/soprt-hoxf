@@ -2,7 +2,11 @@
 import { nextTick, ref } from 'vue'
 import { currentLanguage, t } from '../i18n'
 
-const props = defineProps({ url: { type: String, required: true } })
+const props = defineProps({
+  url: { type: String, required: true },
+  showOpenSafariButton: { type: Boolean, default: false },
+  isIos: { type: Boolean, default: false },
+})
 defineEmits(['close', 'open'])
 
 const copyStatus = ref('')
@@ -39,16 +43,17 @@ const copyUrl = async () => {
       <div class="safari-sheet-handle" aria-hidden="true"></div>
       <button class="safari-close safari-sheet-close" type="button" :aria-label="t('safariClose')" @click="$emit('close')">×</button>
       <span class="safari-guide-kicker">HOXF SPORT TV</span>
-      <h2 id="safari-guide-title">{{ t('safariGuideTitle') }}</h2>
-      <p class="safari-guide-body">{{ t('safariGuideBody') }}</p>
+      <h2 id="safari-guide-title">{{ t(isIos ? 'safariGuideTitle' : 'safariUnsupportedTitle') }}</h2>
+      <p class="safari-guide-body">{{ t(isIos ? 'safariGuideBody' : 'safariUnsupportedBody') }}</p>
       <img class="safari-guide-image" src="/images/safari-guide.png" alt="" width="1200" height="900" />
-      <ol class="safari-steps safari-guide-steps">
+      <ol v-if="isIos" class="safari-steps safari-guide-steps">
         <li><span dir="ltr">1</span><p>{{ t('safariGuideStep1') }}</p></li>
         <li><span dir="ltr">2</span><p>{{ t('safariGuideStep2') }}</p></li>
         <li><span dir="ltr">3</span><p>{{ t('safariGuideStep3') }}</p></li>
       </ol>
+      <p v-else class="safari-guide-unsupported-hint">{{ t('safariUnsupportedHint') }}</p>
       <div class="safari-guide-actions">
-        <button class="safari-open-button" type="button" @click="$emit('open')">{{ t('openInSafari') }}</button>
+        <button v-if="showOpenSafariButton" class="safari-open-button" type="button" @click="$emit('open')">{{ t('openInSafari') }}</button>
         <button class="safari-copy-button" type="button" @click="copyUrl">{{ t('copySafariLink') }}</button>
       </div>
       <div class="safari-copy-status" aria-live="polite">{{ copyStatus }}</div>

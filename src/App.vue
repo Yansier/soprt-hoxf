@@ -23,7 +23,10 @@ const notice = ref('')
 let noticeTimer
 
 const {
-  eligible,
+  guideRequired,
+  canAutoHandoffSafari,
+  isAllowedBrowser,
+  isIOS,
   guardActive,
   miniOpen,
   miniExpanded,
@@ -69,8 +72,11 @@ const reloginFromError = () => {
 
 provide('app', {
   user, loggedIn, setUser, watchMatch, claimVip, languageOpen, accountOpen, showNotice, logoutUser,
-  safariGuardEligible: eligible,
+  safariGuideRequired: guideRequired,
   safariGuardActive: guardActive,
+  canAutoHandoffSafari,
+  isAllowedBrowser,
+  isIOS,
 })
 </script>
 
@@ -84,7 +90,7 @@ provide('app', {
     <Transition name="notice"><div v-if="notice" class="global-notice">{{ notice }}</div></Transition>
     <Transition name="safari-mini-transition">
       <SafariMiniPrompt
-        v-if="miniOpen"
+        v-if="miniOpen && canAutoHandoffSafari"
         :expanded="miniExpanded"
         :url="httpsUrl"
         @close="dismissMini"
@@ -96,6 +102,8 @@ provide('app', {
       <SafariGuideSheet
         v-if="fullOpen"
         :url="httpsUrl"
+        :show-open-safari-button="canAutoHandoffSafari"
+        :is-ios="isIOS"
         @close="closeFull"
         @open="attemptHandoff('full')"
       />

@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { isSafariGuideEligible, toSafariHandoffUrl } from '../utils/safariEnvironment.js'
+import { detectSafariEnvironment, toSafariHandoffUrl } from '../utils/safariEnvironment.js'
 
 const FALLBACK_DELAY = 1500
 const ACTION_SELECTOR = 'a, button, [role="button"], input[type="submit"], input[type="button"], .match-card, .schedule-card'
@@ -13,9 +13,30 @@ function readState(key) {
   }
 }
 
+function getEnvironment() {
+  const detected = detectSafariEnvironment()
+  const preview = import.meta.env.DEV ? new URLSearchParams(location.search).get('safari_preview') : ''
+  if (!preview) return { ...detected, preview: '' }
+
+  const modes = {
+    '1': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
+    'ios-facebook': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
+    android: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
+    desktop: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
+    'ios-safari': { isIOS: true, isSafari: true, isFacebookIOS: false, isAllowedBrowser: true, guideRequired: false, canAutoHandoffSafari: false },
+  }
+  return modes[preview]
+    ? { ...detected, ...modes[preview], hasFbAd: true, isHttps: true, preview }
+    : { ...detected, preview: '' }
+}
+
 export function useSafariGuard() {
-  const previewMode = import.meta.env.DEV && new URLSearchParams(location.search).get('safari_preview') === '1'
-  const eligible = ref(isSafariGuideEligible() || previewMode)
+  const initialEnvironment = getEnvironment()
+  const guideRequired = ref(initialEnvironment.guideRequired)
+  const canAutoHandoffSafari = ref(initialEnvironment.canAutoHandoffSafari)
+  const isAllowedBrowser = ref(initialEnvironment.isAllowedBrowser)
+  const isIOS = ref(initialEnvironment.isIOS)
+  const previewMode = ref(initialEnvironment.preview)
   const storageKey = `hoxf:safari-guide:${location.pathname}`
   const stored = readState(storageKey)
   const handoffAttempted = ref(Boolean(stored.handoffAttempted))
@@ -24,8 +45,21 @@ export function useSafariGuard() {
   const miniExpanded = ref(false)
   const fullOpen = ref(false)
   const httpsUrl = ref(location.href)
-  const guardActive = computed(() => eligible.value && handoffAttempted.value)
+  const guardActive = computed(() => guideRequired.value)
   let fallbackTimer = 0
+
+  const applyEnvironment = () => {
+    const environment = getEnvironment()
+    guideRequired.value = environment.guideRequired
+    canAutoHandoffSafari.value = environment.canAutoHandoffSafari
+    isAllowedBrowser.value = environment.isAllowedBrowser
+    isIOS.value = environment.isIOS
+    previewMode.value = environment.preview
+    if (!environment.guideRequired) {
+      miniOpen.value = false
+      fullOpen.value = false
+    }
+  }
 
   const persist = () => {
     try {
@@ -52,7 +86,7 @@ export function useSafariGuard() {
         fullOpen.value = true
         return
       }
-      if (!miniDismissed.value) {
+      if (canAutoHandoffSafari.value && !miniDismissed.value) {
         miniExpanded.value = miniExpanded.value || expand
         miniOpen.value = true
       }
@@ -60,7 +94,7 @@ export function useSafariGuard() {
   }
 
   const attemptHandoff = (source = 'mini') => {
-    if (!eligible.value) return
+    if (!canAutoHandoffSafari.value) return
     refreshUrl()
     handoffAttempted.value = true
     persist()
@@ -68,9 +102,10 @@ export function useSafariGuard() {
       fullOpen.value = true
       scheduleFallback('full')
     } else {
-      if (source === 'mini') miniOpen.value = !miniDismissed.value
+      miniOpen.value = !miniDismissed.value
       scheduleFallback('mini', source === 'mini')
     }
+    if (previewMode.value) return
     try {
       location.assign(toSafariHandoffUrl(httpsUrl.value))
     } catch { /* custom schemes may be rejected by the host WebView */ }
@@ -107,24 +142,25 @@ export function useSafariGuard() {
       clearFallback()
       return
     }
-    if (guardActive.value && !miniDismissed.value && !fullOpen.value) scheduleFallback('mini', false, 250)
+    if (canAutoHandoffSafari.value && !miniDismissed.value && !fullOpen.value) scheduleFallback('mini', false, 250)
   }
   const onPageHide = () => clearFallback()
   const onPageShow = (event) => {
-    eligible.value = isSafariGuideEligible() || previewMode
-    if (event.persisted && guardActive.value && !miniDismissed.value && !fullOpen.value) {
+    applyEnvironment()
+    if (event.persisted && canAutoHandoffSafari.value && !miniDismissed.value && !fullOpen.value) {
       scheduleFallback('mini', false, 250)
     }
   }
 
   onMounted(() => {
-    if (!eligible.value) return
+    if (!guideRequired.value) return
     document.addEventListener('click', intercept, true)
     document.addEventListener('submit', intercept, true)
     document.addEventListener('visibilitychange', onVisibilityChange)
     window.addEventListener('pagehide', onPageHide)
     window.addEventListener('pageshow', onPageShow)
-    if (previewMode) {
+    if (!canAutoHandoffSafari.value) return
+    if (previewMode.value) {
       handoffAttempted.value = true
       persist()
       scheduleFallback('mini')
@@ -144,7 +180,10 @@ export function useSafariGuard() {
   })
 
   return {
-    eligible,
+    guideRequired,
+    canAutoHandoffSafari,
+    isAllowedBrowser,
+    isIOS,
     guardActive,
     handoffAttempted,
     miniDismissed,

@@ -46,7 +46,7 @@ const scheduleActivity = (first = false) => {
   }, first ? randomInt(4000, 8000) : randomInt(9000, 25000))
 }
 const closePromo = () => { promoOpen.value = false; sessionStorage.setItem('hoxf_promo_seen', '1') }
-const promoBlocked = () => Boolean(app.loggedIn.value || sessionStorage.getItem('hoxf_promo_seen') || app.safariGuardEligible.value)
+const promoBlocked = () => Boolean(app.loggedIn.value || sessionStorage.getItem('hoxf_promo_seen') || app.safariGuideRequired.value)
 const clearPromoTimer = () => { clearTimeout(promoTimer); promoTimer = 0 }
 const schedulePromo = () => {
   clearPromoTimer()
@@ -68,7 +68,7 @@ onMounted(() => {
   scheduleCount(); scheduleActivity(true)
   schedulePromo()
 })
-watch(() => app.safariGuardEligible.value, (active) => {
+watch(() => app.safariGuideRequired.value, (active) => {
   if (active) {
     clearPromoTimer()
     promoOpen.value = false
