@@ -21,12 +21,14 @@ function getEnvironment() {
   const modes = {
     '1': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
     'ios-facebook': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
+    'ios-facebook-http': { isHttps: false, isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
+    'ios-chrome': { isIOS: true, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
     android: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
     desktop: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
     'ios-safari': { isIOS: true, isSafari: true, isFacebookIOS: false, isAllowedBrowser: true, guideRequired: false, canAutoHandoffSafari: false },
   }
   return modes[preview]
-    ? { ...detected, ...modes[preview], hasFbAd: true, isHttps: true, preview }
+    ? { ...detected, isHttps: true, ...modes[preview], preview }
     : { ...detected, preview: '' }
 }
 

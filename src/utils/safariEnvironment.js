@@ -17,9 +17,9 @@ export function detectSafariEnvironment({
   const isMessenger = /Messenger|FBAN\/(?:Messenger|Orca)/i.test(userAgent)
   const isFacebookIOS = isIOS && FACEBOOK_IOS_PATTERN.test(userAgent) && !FACEBOOK_EXCLUSIONS.test(userAgent)
   const isSafari = isIOS && /Version\//i.test(userAgent) && /Safari\//i.test(userAgent) && !IOS_SAFARI_EXCLUSIONS.test(userAgent)
-  const isAllowedBrowser = hasFbAd && isHttps && isIOS && isSafari
-  const guideRequired = hasFbAd && isHttps && !isAllowedBrowser
-  const canAutoHandoffSafari = guideRequired && isIOS && isFacebookIOS
+  const isAllowedBrowser = isIOS && isSafari
+  const guideRequired = !isAllowedBrowser
+  const canAutoHandoffSafari = guideRequired && isIOS && isFacebookIOS && isHttps
 
   return {
     hasFbAd,
