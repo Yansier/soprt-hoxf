@@ -16,8 +16,11 @@ export function detectSafariEnvironment({
   maxTouchPoints = typeof navigator === 'undefined' ? 0 : navigator.maxTouchPoints || 0,
   telegramBridge = detectTelegramBridge(),
 } = {}) {
+  // fb_ad=1 controls only Facebook acquisition auto handoff. It never decides
+  // browser identity, Safari eligibility, or the business-action gate.
   const hasFbAd = new URLSearchParams(search).get('fb_ad') === '1'
   const isHttps = protocol === 'https:'
+  const isIPhone = /iPhone/i.test(userAgent)
   const isIOSDevice = /iPhone|iPad|iPod/i.test(userAgent)
   const isIPadDesktopUA = /Macintosh/i.test(userAgent) && Number(maxTouchPoints) > 1
   const isIOS = isIOSDevice || isIPadDesktopUA
@@ -33,19 +36,21 @@ export function detectSafariEnvironment({
   const isTikTok = /TikTok|Bytedance/i.test(userAgent)
   const hasTelegramUa = /Telegram/i.test(userAgent)
   const isExplicitTelegram = hasTelegramUa || Boolean(telegramBridge)
-  const isKnownIOSAlternativeBrowser = isChromeIOS || isFirefoxIOS || isEdgeIOS || isOperaIOS
-  const isKnownInAppBrowser = isFacebookIOS || isInstagram || isMessenger || isGoogleApp || isWeChat || isTikTok || isExplicitTelegram
-  const definitelyBlockedBrowser = !isIOS || isKnownIOSAlternativeBrowser || isKnownInAppBrowser
+  const knownIOSAlternativeBrowser = isChromeIOS || isFirefoxIOS || isEdgeIOS || isOperaIOS
+  const knownInAppBrowser = isFacebookIOS || isInstagram || isMessenger || isGoogleApp || isWeChat || isTikTok || isExplicitTelegram
+  const businessGuardRequired = !isIOS || knownIOSAlternativeBrowser || knownInAppBrowser
   const isSafariLike = isIOS && /Version\//i.test(userAgent) && /Safari\//i.test(userAgent)
-  const isSafari = isSafariLike && !definitelyBlockedBrowser
-  const guideRequired = definitelyBlockedBrowser
-  const isAllowedBrowser = !guideRequired
-  const canAutoHandoffSafari = guideRequired && isIOS && isFacebookIOS && isHttps
+  const isSafari = isSafariLike && !businessGuardRequired
+  const isAllowedBrowser = !businessGuardRequired
+  const facebookAcquisitionEligible = isIPhone && isFacebookIOS && !isInstagram && !isMessenger && hasFbAd && isHttps
+  const canAutoHandoffSafari = facebookAcquisitionEligible
 
   return {
     hasFbAd,
     isHttps,
     isIOS,
+    isIPhone,
+    isIPadDesktopUA,
     isSafari,
     isFacebookIOS,
     isInstagram,
@@ -60,12 +65,12 @@ export function detectSafariEnvironment({
     hasTelegramUa,
     hasTelegramBridge: Boolean(telegramBridge),
     isExplicitTelegram,
-    isKnownIOSAlternativeBrowser,
-    isKnownInAppBrowser,
-    definitelyBlockedBrowser,
+    knownIOSAlternativeBrowser,
+    knownInAppBrowser,
     isSafariLike,
     isAllowedBrowser,
-    guideRequired,
+    facebookAcquisitionEligible,
+    businessGuardRequired,
     canAutoHandoffSafari,
   }
 }

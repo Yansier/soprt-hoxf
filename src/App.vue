@@ -23,7 +23,8 @@ const notice = ref('')
 let noticeTimer
 
 const {
-  guideRequired,
+  facebookAcquisitionEligible,
+  businessGuardRequired,
   canAutoHandoffSafari,
   isAllowedBrowser,
   isIOS,
@@ -72,8 +73,9 @@ const reloginFromError = () => {
 
 provide('app', {
   user, loggedIn, setUser, watchMatch, claimVip, languageOpen, accountOpen, showNotice, logoutUser,
-  safariGuideRequired: guideRequired,
+  safariGuideRequired: businessGuardRequired,
   safariGuardActive: guardActive,
+  facebookAcquisitionEligible,
   canAutoHandoffSafari,
   isAllowedBrowser,
   isIOS,

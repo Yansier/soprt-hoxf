@@ -19,17 +19,18 @@ function getEnvironment() {
   if (!preview) return { ...detected, preview: '' }
 
   const modes = {
-    '1': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
-    'ios-facebook': { isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: true },
-    'ios-facebook-http': { isHttps: false, isIOS: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
-    'ios-chrome': { isIOS: true, isSafari: false, isChromeIOS: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
-    android: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
-    desktop: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
-    'ios-safari': { isIOS: true, isSafari: true, isFacebookIOS: false, isAllowedBrowser: true, guideRequired: false, canAutoHandoffSafari: false },
-    'telegram-explicit': { isIOS: true, isSafari: false, isExplicitTelegram: true, isKnownInAppBrowser: true, definitelyBlockedBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
-    'telegram-safari-like': { isIOS: true, isSafari: true, isSafariLike: true, isExplicitTelegram: false, isKnownInAppBrowser: false, definitelyBlockedBrowser: false, isFacebookIOS: false, isAllowedBrowser: true, guideRequired: false, canAutoHandoffSafari: false },
-    instagram: { isIOS: true, isSafari: false, isInstagram: true, isKnownInAppBrowser: true, definitelyBlockedBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
-    messenger: { isIOS: true, isSafari: false, isMessenger: true, isKnownInAppBrowser: true, definitelyBlockedBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, guideRequired: true, canAutoHandoffSafari: false },
+    'facebook-ad': { isHttps: true, hasFbAd: true, isIOS: true, isIPhone: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, facebookAcquisitionEligible: true, businessGuardRequired: true, canAutoHandoffSafari: true },
+    'facebook-organic': { isHttps: true, hasFbAd: false, isIOS: true, isIPhone: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
+    'facebook-http': { isHttps: false, hasFbAd: true, isIOS: true, isIPhone: true, isSafari: false, isFacebookIOS: true, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
+    'ios-safari': { isIOS: true, isIPhone: true, isSafari: true, isFacebookIOS: false, isAllowedBrowser: true, facebookAcquisitionEligible: false, businessGuardRequired: false, canAutoHandoffSafari: false },
+    'ios-safari-fbad': { hasFbAd: true, isIOS: true, isIPhone: true, isSafari: true, isFacebookIOS: false, isAllowedBrowser: true, facebookAcquisitionEligible: false, businessGuardRequired: false, canAutoHandoffSafari: false },
+    'ios-chrome': { isIOS: true, isIPhone: true, isSafari: false, isChromeIOS: true, isFacebookIOS: false, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
+    'telegram-explicit': { isIOS: true, isIPhone: true, isSafari: false, isExplicitTelegram: true, knownInAppBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
+    'telegram-safari-like': { isIOS: true, isIPhone: true, isSafari: true, isSafariLike: true, isExplicitTelegram: false, knownInAppBrowser: false, isFacebookIOS: false, isAllowedBrowser: true, facebookAcquisitionEligible: false, businessGuardRequired: false, canAutoHandoffSafari: false },
+    instagram: { isIOS: true, isIPhone: true, isSafari: false, isInstagram: true, knownInAppBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
+    messenger: { isIOS: true, isIPhone: true, isSafari: false, isMessenger: true, knownInAppBrowser: true, isFacebookIOS: false, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
+    android: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
+    desktop: { isIOS: false, isSafari: false, isFacebookIOS: false, isAllowedBrowser: false, facebookAcquisitionEligible: false, businessGuardRequired: true, canAutoHandoffSafari: false },
   }
   return modes[preview]
     ? { ...detected, isHttps: true, ...modes[preview], preview }
@@ -38,7 +39,8 @@ function getEnvironment() {
 
 export function useSafariGuard() {
   const initialEnvironment = getEnvironment()
-  const guideRequired = ref(initialEnvironment.guideRequired)
+  const facebookAcquisitionEligible = ref(initialEnvironment.facebookAcquisitionEligible)
+  const businessGuardRequired = ref(initialEnvironment.businessGuardRequired)
   const canAutoHandoffSafari = ref(initialEnvironment.canAutoHandoffSafari)
   const isAllowedBrowser = ref(initialEnvironment.isAllowedBrowser)
   const isIOS = ref(initialEnvironment.isIOS)
@@ -51,20 +53,19 @@ export function useSafariGuard() {
   const miniExpanded = ref(false)
   const fullOpen = ref(false)
   const httpsUrl = ref(location.href)
-  const guardActive = computed(() => guideRequired.value)
+  const guardActive = computed(() => businessGuardRequired.value)
   let fallbackTimer = 0
 
   const applyEnvironment = () => {
     const environment = getEnvironment()
-    guideRequired.value = environment.guideRequired
+    facebookAcquisitionEligible.value = environment.facebookAcquisitionEligible
+    businessGuardRequired.value = environment.businessGuardRequired
     canAutoHandoffSafari.value = environment.canAutoHandoffSafari
     isAllowedBrowser.value = environment.isAllowedBrowser
     isIOS.value = environment.isIOS
     previewMode.value = environment.preview
-    if (!environment.guideRequired) {
-      miniOpen.value = false
-      fullOpen.value = false
-    }
+    if (!environment.facebookAcquisitionEligible) miniOpen.value = false
+    if (!environment.businessGuardRequired) fullOpen.value = false
   }
 
   const persist = () => {
@@ -86,13 +87,14 @@ export function useSafariGuard() {
     clearFallback()
     fallbackTimer = window.setTimeout(() => {
       fallbackTimer = 0
-      if (document.hidden || !guardActive.value) return
+      if (document.hidden) return
       refreshUrl()
       if (target === 'full') {
+        if (!businessGuardRequired.value) return
         fullOpen.value = true
         return
       }
-      if (canAutoHandoffSafari.value && !miniDismissed.value) {
+      if (facebookAcquisitionEligible.value && canAutoHandoffSafari.value && !miniDismissed.value) {
         miniExpanded.value = miniExpanded.value || expand
         miniOpen.value = true
       }
@@ -148,24 +150,23 @@ export function useSafariGuard() {
       clearFallback()
       return
     }
-    if (canAutoHandoffSafari.value && !miniDismissed.value && !fullOpen.value) scheduleFallback('mini', false, 250)
+    if (facebookAcquisitionEligible.value && !miniDismissed.value && !fullOpen.value) scheduleFallback('mini', false, 250)
   }
   const onPageHide = () => clearFallback()
   const onPageShow = (event) => {
     applyEnvironment()
-    if (event.persisted && canAutoHandoffSafari.value && !miniDismissed.value && !fullOpen.value) {
+    if (event.persisted && facebookAcquisitionEligible.value && !miniDismissed.value && !fullOpen.value) {
       scheduleFallback('mini', false, 250)
     }
   }
 
   onMounted(() => {
-    if (!guideRequired.value) return
     document.addEventListener('click', intercept, true)
     document.addEventListener('submit', intercept, true)
     document.addEventListener('visibilitychange', onVisibilityChange)
     window.addEventListener('pagehide', onPageHide)
     window.addEventListener('pageshow', onPageShow)
-    if (!canAutoHandoffSafari.value) return
+    if (!facebookAcquisitionEligible.value) return
     if (previewMode.value) {
       handoffAttempted.value = true
       persist()
@@ -186,7 +187,8 @@ export function useSafariGuard() {
   })
 
   return {
-    guideRequired,
+    facebookAcquisitionEligible,
+    businessGuardRequired,
     canAutoHandoffSafari,
     isAllowedBrowser,
     isIOS,
